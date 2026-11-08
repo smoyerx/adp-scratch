@@ -1,0 +1,18 @@
+name: adp-check
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+jobs:
+  adp-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check ADP-Ticket field
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+          ACTION: ${{ github.event.action }}
+        run: |
+          echo "event action: $ACTION"
+          printf 'body: %s\n' "$BODY"
+          n=$(printf '%s\n' "$BODY" | grep -ciE '^ADP-Ticket:' || true)
+          ok=$(printf '%s\n' "$BODY" | grep -ciE '^ADP-Ticket: *(#[1-9][0-9]*|none) *$' || true)
+          if [ "$n" = 1 ] && [ "$ok" = 1 ]; then echo PASS; else echo "FAIL: lines=$n valid=$ok"; exit 1; fi
